@@ -1,22 +1,67 @@
 import Link from "next/link";
+import { login } from "../actions";
 
-export default function LoginPage() {
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+}) {
+  const resolvedSearchParams = await searchParams;
+  const error = resolvedSearchParams?.error;
+
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
-      <div className="w-full max-w-md bg-white rounded-lg shadow p-8 space-y-6">
-        <div className="text-center">
+      <div className="w-full max-w-md bg-white rounded-lg shadow-xl border border-slate-100 p-8 space-y-6">
+        <div className="text-center mb-8">
+          <Link href="/" className="text-2xl font-black text-indigo-600 tracking-tighter block mb-4">
+            Trackio
+          </Link>
           <h1 className="text-2xl font-bold text-slate-900">Connexion</h1>
           <p className="text-slate-600 mt-2">Accédez à votre compte Trackio</p>
         </div>
-        {/* Placeholder pour le formulaire de connexion Supabase */}
-        <div className="p-4 bg-slate-100 rounded text-center text-slate-500 flex flex-col gap-4">
-          <p>Formulaire de connexion à venir (Phase 4)</p>
-          <Link href="/dashboard" className="inline-block px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition">
-            Aller au Dashboard (Test)
-          </Link>
-        </div>
-        <div className="text-center text-sm text-slate-600">
-          Pas encore de compte ? <Link href="/register" className="text-indigo-600 hover:underline">S'inscrire</Link>
+        
+        {error && (
+          <div className="p-4 bg-red-50 text-red-700 text-sm rounded-lg border border-red-200">
+            {error}
+          </div>
+        )}
+        
+        <form className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1" htmlFor="email">Email</label>
+            <input 
+              id="email" 
+              name="email" 
+              type="email" 
+              required 
+              className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" 
+              placeholder="votre@email.com"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1" htmlFor="password">Mot de passe</label>
+            <input 
+              id="password" 
+              name="password" 
+              type="password" 
+              required 
+              className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" 
+              placeholder="••••••••"
+            />
+          </div>
+
+          <button 
+            formAction={login}
+            type="submit" 
+            className="w-full bg-indigo-600 text-white font-semibold py-3 rounded-lg hover:bg-indigo-700 transition"
+          >
+            Se connecter
+          </button>
+        </form>
+
+        <div className="text-center text-sm text-slate-600 mt-6 pt-6 border-t border-slate-100">
+          Pas encore de compte ? <Link href="/register" className="text-indigo-600 hover:underline font-medium">S'inscrire</Link>
         </div>
       </div>
     </div>

@@ -1,4 +1,5 @@
-import Link from "next/link";
+import { logout } from "@/app/(auth)/actions";
+import Sidebar from "./Sidebar";
 
 export default function DashboardLayout({
   children,
@@ -6,37 +7,11 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex h-screen bg-slate-50">
-      {/* Sidebar */}
-      <aside className="w-64 bg-slate-900 text-white flex flex-col">
-        <div className="p-6">
-          <h1 className="text-2xl font-bold tracking-tight text-white">Trackio</h1>
-        </div>
-        
-        <nav className="flex-1 px-4 space-y-2">
-          <Link href="/dashboard" className="block px-4 py-2 rounded bg-slate-800 hover:bg-slate-700 transition">
-            Tableau de bord
-          </Link>
-          <Link href="/products" className="block px-4 py-2 rounded hover:bg-slate-700 transition">
-            Produits
-          </Link>
-          <Link href="/sales" className="block px-4 py-2 rounded hover:bg-slate-700 transition">
-            Ventes
-          </Link>
-          <Link href="/expenses" className="block px-4 py-2 rounded hover:bg-slate-700 transition">
-            Dépenses
-          </Link>
-        </nav>
-        
-        <div className="p-4 pb-12 border-t border-slate-700">
-          <Link href="/settings" className="block px-4 py-2 rounded hover:bg-slate-700 transition">
-            Paramètres
-          </Link>
-        </div>
-      </aside>
+    <div className="flex flex-col md:flex-row h-screen bg-slate-50 overflow-hidden">
+      <Sidebar logoutAction={logout} />
 
       {/* Main Content */}
-      <main className="flex-1 overflow-auto p-8 text-slate-900">
+      <main className="flex-1 overflow-y-auto p-4 md:p-8 text-slate-900 w-full">
         {children}
       </main>
     </div>
