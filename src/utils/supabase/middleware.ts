@@ -27,12 +27,15 @@ export async function updateSession(request: NextRequest) {
     }
   )
 
-  // IMPORTANT: Avoid writing any logic between createServerClient and
-  // supabase.auth.getUser(). A simple mistake could make it very hard to debug
-  // issues with users being randomly logged out.
+  // IMPORTANT: On Vercel Edge (Hobby), getUser() can sometimes timeout (MIDDLEWARE_INVOCATION_TIMEOUT)
+  // because it makes a network request. We use getSession() here just for fast routing.
+  // La vraie sécurité (vérification du token sur le serveur) est gérée par getUser() dans les Server Components
+  // et par les politiques RLS dans la base de données.
   const {
-    data: { user },
-  } = await supabase.auth.getUser()
+    data: { session },
+  } = await supabase.auth.getSession()
+  
+  const user = session?.user
 
   const isAuthRoute = request.nextUrl.pathname.startsWith('/login') || request.nextUrl.pathname.startsWith('/register')
   
