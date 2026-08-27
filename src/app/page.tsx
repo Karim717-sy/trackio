@@ -14,7 +14,7 @@ export default function LandingPage() {
           <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-32 text-center">
             <div className="inline-flex items-center px-4 py-2 rounded-full bg-indigo-50 text-indigo-700 text-sm font-semibold mb-8 border border-indigo-100">
               <span className="flex h-2 w-2 rounded-full bg-indigo-600 mr-2"></span>
-              Nouveau SaaS pour l'e-commerce en Afrique
+              Enfin, maîtrisez vraiment vos bénéfices.
             </div>
             <h1 className="text-5xl md:text-7xl font-extrabold text-slate-900 tracking-tight mb-8">
               Comprenez exactement <br className="hidden md:block" />
@@ -113,20 +113,24 @@ export default function LandingPage() {
                 <div className="flex-1 w-full bg-white rounded-2xl shadow-xl p-8 border border-slate-100 transform hover:-translate-y-2 transition duration-500">
                   <div className="space-y-4">
                     <div className="flex justify-between items-center border-b pb-4">
-                      <span className="text-slate-500">CA hors livraison</span>
+                      <span className="text-slate-500">Chiffre d'affaires</span>
                       <span className="font-semibold text-slate-900">32 000 FCFA</span>
                     </div>
                     <div className="flex justify-between items-center border-b pb-4">
-                      <span className="text-slate-500">Coût de revient total</span>
+                      <span className="text-slate-500">Livraison</span>
+                      <span className="font-semibold text-amber-600">- 2 000 FCFA</span>
+                    </div>
+                    <div className="flex justify-between items-center border-b pb-4">
+                      <span className="text-slate-500">Coût d'achat</span>
                       <span className="font-semibold text-amber-600">- 5 200 FCFA</span>
                     </div>
                     <div className="flex justify-between items-center border-b pb-4">
                       <span className="text-slate-500">Dépenses publicitaires</span>
-                      <span className="font-semibold text-amber-600">- 16 500 FCFA</span>
+                      <span className="font-semibold text-amber-600">- 6 000 FCFA</span>
                     </div>
                     <div className="flex justify-between items-center pt-2">
                       <span className="text-lg font-bold text-slate-900">Bénéfice Net</span>
-                      <span className="text-xl font-bold text-green-600">10 300 FCFA</span>
+                      <span className="text-xl font-bold text-green-600">18 800 FCFA</span>
                     </div>
                   </div>
                 </div>
