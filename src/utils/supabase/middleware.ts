@@ -35,14 +35,11 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser()
 
   const isAuthRoute = request.nextUrl.pathname.startsWith('/login') || request.nextUrl.pathname.startsWith('/register')
-  const isProtectedRoute = request.nextUrl.pathname.startsWith('/dashboard') || 
-                           request.nextUrl.pathname.startsWith('/products') || 
-                           request.nextUrl.pathname.startsWith('/rentability') || 
-                           request.nextUrl.pathname.startsWith('/sales') || 
-                           request.nextUrl.pathname.startsWith('/expenses') || 
-                           request.nextUrl.pathname.startsWith('/settings')
+  
+  // Refus par défaut : toutes les routes sont protégées Sauf l'auth et la home
+  const isPublicRoute = isAuthRoute || request.nextUrl.pathname === '/'
 
-  if (isProtectedRoute && !user) {
+  if (!isPublicRoute && !user) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     return NextResponse.redirect(url)

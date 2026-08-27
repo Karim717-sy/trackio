@@ -2,6 +2,21 @@
 
 import { createClient } from '@/utils/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { z } from 'zod'
+
+const addProductMarketSchema = z.object({
+  product_id: z.string().min(1),
+  new_product_name: z.string().optional(),
+  country: z.string().min(1),
+  currency: z.string().min(1),
+  selling_price: z.coerce.number().min(0),
+  cost_price: z.coerce.number().min(0),
+})
+
+const updateProductMarketSchema = z.object({
+  selling_price: z.coerce.number().min(0),
+  cost_price: z.coerce.number().min(0),
+})
 
 export async function getProducts() {
   const supabase = await createClient()
@@ -14,7 +29,10 @@ export async function getProducts() {
     .eq('user_id', user.id)
     .order('name', { ascending: true })
 
-  if (error) throw new Error(error.message)
+  if (error) {
+    console.error("Erreur getProducts:", error)
+    throw new Error("Erreur de récupération des produits")
+  }
   return data
 }
 
@@ -34,7 +52,10 @@ export async function getProductMarkets() {
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })
 
-  if (error) throw new Error(error.message)
+  if (error) {
+    console.error("Erreur getProductMarkets:", error)
+    throw new Error("Erreur de récupération des marchés")
+  }
   return data
 }
 
@@ -43,32 +64,34 @@ export async function addProductMarket(formData: FormData) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error("Non autorisé")
 
-  let productId = formData.get('product_id') as string
-  const newProductName = formData.get('new_product_name') as string
-  const country = formData.get('country') as string
-  const currency = formData.get('currency') as string
-  const selling_price = parseFloat(formData.get('selling_price') as string)
-  const cost_price = parseFloat(formData.get('cost_price') as string)
+  const parsed = addProductMarketSchema.safeParse(Object.fromEntries(formData.entries()))
+  if (!parsed.success) {
+    throw new Error("Données invalides")
+  }
 
-  // Si on crée un nouveau produit parent
-  if (productId === 'NEW' && newProductName) {
+  let { product_id } = parsed.data
+  const { new_product_name, country, currency, selling_price, cost_price } = parsed.data
+
+  if (product_id === 'NEW' && new_product_name) {
     const { data: newProduct, error: productError } = await supabase
       .from('products')
-      .insert([{ user_id: user.id, name: newProductName }])
+      .insert([{ user_id: user.id, name: new_product_name }])
       .select()
       .single()
       
-    if (productError) throw new Error(productError.message)
-    productId = newProduct.id
+    if (productError) {
+      console.error("Erreur création produit:", productError)
+      throw new Error("Impossible de créer le produit.")
+    }
+    product_id = newProduct.id
   }
 
-  // Création du marché
   const { error: marketError } = await supabase
     .from('product_markets')
     .insert([
       { 
         user_id: user.id, 
-        product_id: productId,
+        product_id: product_id,
         country,
         currency,
         selling_price, 
@@ -76,7 +99,10 @@ export async function addProductMarket(formData: FormData) {
       }
     ])
 
-  if (marketError) throw new Error("Vous avez déjà ajouté ce produit pour ce pays, ou une erreur est survenue.")
+  if (marketError) {
+    console.error("Erreur création marché:", marketError)
+    throw new Error("Vous avez déjà ajouté ce produit pour ce pays, ou une erreur est survenue.")
+  }
   
   revalidatePath('/products')
 }
@@ -92,7 +118,10 @@ export async function toggleProductMarketStatus(id: string, currentStatus: boole
     .eq('id', id)
     .eq('user_id', user.id)
 
-  if (error) throw new Error(error.message)
+  if (error) {
+    console.error("Erreur toggle status:", error)
+    throw new Error("Impossible de changer le statut.")
+  }
   revalidatePath('/products')
 }
 
@@ -107,7 +136,10 @@ export async function deleteProductMarket(id: string) {
     .eq('id', id)
     .eq('user_id', user.id)
 
-  if (error) throw new Error(error.message)
+  if (error) {
+    console.error("Erreur suppression marché:", error)
+    throw new Error("Impossible de supprimer le marché.")
+  }
   revalidatePath('/products')
 }
 
@@ -116,8 +148,12 @@ export async function updateProductMarket(id: string, formData: FormData) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error("Non autorisé")
 
-  const selling_price = parseFloat(formData.get('selling_price') as string)
-  const cost_price = parseFloat(formData.get('cost_price') as string)
+  const parsed = updateProductMarketSchema.safeParse(Object.fromEntries(formData.entries()))
+  if (!parsed.success) {
+    throw new Error("Données invalides")
+  }
+
+  const { selling_price, cost_price } = parsed.data
 
   const { error } = await supabase
     .from('product_markets')
@@ -125,6 +161,9 @@ export async function updateProductMarket(id: string, formData: FormData) {
     .eq('id', id)
     .eq('user_id', user.id)
 
-  if (error) throw new Error(error.message)
+  if (error) {
+    console.error("Erreur update marché:", error)
+    throw new Error("Impossible de mettre à jour le marché.")
+  }
   revalidatePath('/products')
 }

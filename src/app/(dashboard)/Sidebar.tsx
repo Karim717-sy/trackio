@@ -15,6 +15,7 @@ export default function Sidebar({ logoutAction }: { logoutAction: () => void }) 
     { href: "/dashboard", label: "Tableau de bord" },
     { href: "/products", label: "Produits" },
     { href: "/rentability", label: "Rentabilité" },
+    { href: "/stock", label: "Stock & Investissements" },
   ];
 
   return (

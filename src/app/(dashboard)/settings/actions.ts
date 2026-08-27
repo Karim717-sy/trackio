@@ -2,14 +2,28 @@
 
 import { createClient } from '@/utils/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { z } from 'zod'
+
+const updateSettingsSchema = z.object({
+  full_name: z.string().optional(),
+  main_country: z.string().min(1),
+  main_currency: z.string().min(1),
+  display_currency: z.string().min(1),
+})
+
+const updatePasswordSchema = z.object({
+  password: z.string().min(6, "Le mot de passe doit contenir au moins 6 caractères."),
+  confirm_password: z.string(),
+}).refine(data => data.password === data.confirm_password, {
+  message: "Les mots de passe ne correspondent pas.",
+  path: ["confirm_password"]
+})
 
 export async function getUserProfile() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error("Non autorisé")
 
-  // On essaie de récupérer le profil. Si les colonnes n'existent pas encore, 
-  // Supabase ignorera celles non demandées si on select *, mais pour être sûr on select *.
   const { data, error } = await supabase
     .from('profiles')
     .select('*')
@@ -18,7 +32,6 @@ export async function getUserProfile() {
 
   if (error && error.code !== 'PGRST116') {
     console.error("Erreur profile:", error.message)
-    // Ne pas crash ici si la table n'a pas encore les colonnes, on renvoie des valeurs par défaut.
   }
 
   return {
@@ -35,14 +48,13 @@ export async function updateSettings(formData: FormData) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error("Non autorisé")
 
-  const full_name = formData.get('full_name') as string
-  const main_country = formData.get('main_country') as string
-  const main_currency = formData.get('main_currency') as string
-  const display_currency = formData.get('display_currency') as string
-  const password = formData.get('password') as string
+  const parsed = updateSettingsSchema.safeParse(Object.fromEntries(formData.entries()))
+  if (!parsed.success) {
+    throw new Error("Données de paramètres invalides")
+  }
 
-  // Mettre à jour le profil (nom, pays, devises)
-  // On utilise upsert au cas où le profil n'aurait pas été créé lors de l'inscription
+  const { full_name, main_country, main_currency, display_currency } = parsed.data
+
   const { error: profileError } = await supabase
     .from('profiles')
     .upsert({
@@ -55,11 +67,12 @@ export async function updateSettings(formData: FormData) {
     })
 
   if (profileError) {
-    throw new Error("Erreur de mise à jour du profil. Avez-vous exécuté le script SQL V4 ? (" + profileError.message + ")")
+    console.error("Erreur mise à jour profil:", profileError)
+    throw new Error("Erreur de mise à jour du profil.")
   }
 
   revalidatePath('/settings')
-  revalidatePath('/dashboard') // Car le display_currency change peut-être
+  revalidatePath('/dashboard') 
 }
 
 export async function updatePassword(formData: FormData) {
@@ -67,20 +80,19 @@ export async function updatePassword(formData: FormData) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error("Non autorisé")
 
-  const password = formData.get('password') as string
-  const confirm = formData.get('confirm_password') as string
-
-  if (!password || password.length < 6) {
-    throw new Error("Le mot de passe doit contenir au moins 6 caractères.")
+  const parsed = updatePasswordSchema.safeParse(Object.fromEntries(formData.entries()))
+  if (!parsed.success) {
+    throw new Error(parsed.error.issues?.[0]?.message || "Données invalides")
   }
 
-  if (password !== confirm) {
-    throw new Error("Les mots de passe ne correspondent pas.")
-  }
+  const { password } = parsed.data
 
   const { error: authError } = await supabase.auth.updateUser({
     password: password
   })
 
-  if (authError) throw new Error("Erreur mise à jour mot de passe: " + authError.message)
+  if (authError) {
+    console.error("Erreur updateUser mot de passe:", authError)
+    throw new Error("Erreur de mise à jour du mot de passe.")
+  }
 }

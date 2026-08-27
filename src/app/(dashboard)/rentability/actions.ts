@@ -2,6 +2,22 @@
 
 import { createClient } from '@/utils/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { z } from 'zod'
+
+const addPerformanceSchema = z.object({
+  date: z.string().min(1),
+  product_market_id: z.string().uuid(),
+  quantity: z.coerce.number().int().min(0),
+  revenue: z.coerce.number().min(0),
+  ad_spend: z.coerce.number().min(0),
+})
+
+const updatePerformanceSchema = z.object({
+  quantity: z.coerce.number().int().min(0),
+  revenue: z.coerce.number().min(0),
+  ad_spend: z.coerce.number().min(0),
+  unit_selling_price: z.coerce.number().min(0),
+})
 
 export async function getPerformances() {
   const supabase = await createClient()
@@ -22,7 +38,10 @@ export async function getPerformances() {
     .eq('user_id', user.id)
     .order('date', { ascending: false })
 
-  if (error) throw new Error(error.message)
+  if (error) {
+    console.error("Erreur getPerformances:", error)
+    throw new Error("Erreur de récupération des données")
+  }
   return data
 }
 
@@ -31,24 +50,27 @@ export async function addPerformance(formData: FormData) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error("Non autorisé")
 
-  const date = formData.get('date') as string
-  const product_market_id = formData.get('product_market_id') as string
-  const quantity = parseInt(formData.get('quantity') as string, 10)
-  const revenue = parseFloat(formData.get('revenue') as string)
-  const ad_spend = parseFloat(formData.get('ad_spend') as string)
+  const parsed = addPerformanceSchema.safeParse(Object.fromEntries(formData.entries()))
+  if (!parsed.success) {
+    throw new Error("Données invalides")
+  }
 
-  // Récupérer les prix actuels pour les historiser
+  const { date, product_market_id, quantity, revenue, ad_spend } = parsed.data
+
   const { data: marketData, error: marketError } = await supabase
     .from('product_markets')
     .select('cost_price, selling_price')
     .eq('id', product_market_id)
     .single()
 
-  if (marketError) throw new Error("Impossible de récupérer les informations du produit.")
+  if (marketError) {
+    console.error("Erreur produit:", marketError)
+    throw new Error("Impossible de récupérer les informations du produit.")
+  }
+
   const unit_cost_price = marketData.cost_price;
   const unit_selling_price = marketData.selling_price;
 
-  // Calculer les frais de livraison automatiquement
   const generalRevenue = quantity * unit_selling_price;
   const shipping_cost = Math.max(0, generalRevenue - revenue);
 
@@ -68,10 +90,11 @@ export async function addPerformance(formData: FormData) {
     ])
 
   if (error) {
+    console.error("Erreur insert performance:", error)
     if (error.code === '23505') {
       throw new Error("Vous avez déjà enregistré les performances de ce produit pour cette date.")
     }
-    throw new Error(error.message)
+    throw new Error("Impossible d'ajouter la performance.")
   }
   
   revalidatePath('/rentability')
@@ -88,7 +111,10 @@ export async function deletePerformance(id: string) {
     .eq('id', id)
     .eq('user_id', user.id)
 
-  if (error) throw new Error(error.message)
+  if (error) {
+    console.error("Erreur suppression performance:", error)
+    throw new Error("Impossible de supprimer cette entrée.")
+  }
   revalidatePath('/rentability')
 }
 
@@ -97,10 +123,12 @@ export async function updatePerformance(id: string, formData: FormData) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error("Non autorisé")
 
-  const quantity = parseInt(formData.get('quantity') as string, 10)
-  const revenue = parseFloat(formData.get('revenue') as string)
-  const ad_spend = parseFloat(formData.get('ad_spend') as string)
-  const unit_selling_price = parseFloat(formData.get('unit_selling_price') as string)
+  const parsed = updatePerformanceSchema.safeParse(Object.fromEntries(formData.entries()))
+  if (!parsed.success) {
+    throw new Error("Données invalides")
+  }
+
+  const { quantity, revenue, ad_spend, unit_selling_price } = parsed.data
 
   const generalRevenue = quantity * unit_selling_price;
   const shipping_cost = Math.max(0, generalRevenue - revenue);
@@ -111,6 +139,9 @@ export async function updatePerformance(id: string, formData: FormData) {
     .eq('id', id)
     .eq('user_id', user.id)
 
-  if (error) throw new Error(error.message)
+  if (error) {
+    console.error("Erreur update performance:", error)
+    throw new Error("Impossible de mettre à jour la performance.")
+  }
   revalidatePath('/rentability')
 }
