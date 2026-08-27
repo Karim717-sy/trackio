@@ -7,12 +7,12 @@ import {
 } from 'recharts'
 import { DollarSign, TrendingUp, TrendingDown, Package, Activity, Percent, Truck } from 'lucide-react'
 
-const formatFCFA = (val: number) => new Intl.NumberFormat('fr-FR').format(val) + ' F'
+import { convertCurrency, formatCurrency } from '@/utils/currencies'
 const COLORS = ['#4f46e5', '#0ea5e9', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#f43f5e']
 
 import CustomDropdown from './CustomDropdown'
 
-export default function DashboardClient({ performances }: { performances: any[] }) {
+export default function DashboardClient({ performances, displayCurrency = 'XOF' }: { performances: any[], displayCurrency?: string }) {
   const [period, setPeriod] = useState('30d')
   const [countryFilter, setCountryFilter] = useState('All')
 
@@ -22,6 +22,13 @@ export default function DashboardClient({ performances }: { performances: any[] 
     performances.forEach(p => countries.add(p.product_markets.country))
     return Array.from(countries).sort()
   }, [performances])
+
+  // Devise d'affichage dynamique : si un pays est sélectionné, on affiche dans la devise de ce pays
+  const dynamicDisplayCurrency = useMemo(() => {
+    if (countryFilter === 'All') return displayCurrency;
+    const perfForCountry = performances.find(p => p.product_markets.country === countryFilter);
+    return perfForCountry?.product_markets?.currency || displayCurrency;
+  }, [countryFilter, performances, displayCurrency]);
 
   // Filtrage
   const filteredPerformances = useMemo(() => {
@@ -48,8 +55,23 @@ export default function DashboardClient({ performances }: { performances: any[] 
         if (d < startDate) return false
       }
       return countryFilter === 'All' || p.product_markets.country === countryFilter
+    }).map(p => {
+      const mCur = p.product_markets.currency || 'XOF'
+      const gRev = convertCurrency(p.quantity * p.unit_selling_price, mCur, dynamicDisplayCurrency)
+      const shipCost = convertCurrency(p.shipping_cost, mCur, dynamicDisplayCurrency)
+      const rWithoutShip = gRev - shipCost
+      const cost = convertCurrency(p.quantity * p.unit_cost_price, mCur, dynamicDisplayCurrency)
+      const adSpend = convertCurrency(p.ad_spend, mCur, dynamicDisplayCurrency)
+      const profit = rWithoutShip - cost - adSpend
+
+      return {
+        ...p,
+        converted: {
+          gRev, shipCost, rWithoutShip, cost, adSpend, profit
+        }
+      }
     })
-  }, [performances, period, countryFilter])
+  }, [performances, period, countryFilter, dynamicDisplayCurrency])
 
   // KPIs
   const KPIs = useMemo(() => {
@@ -61,14 +83,12 @@ export default function DashboardClient({ performances }: { performances: any[] 
     let totalProductsCost = 0
 
     filteredPerformances.forEach(p => {
-      const gRev = p.quantity * p.unit_selling_price
-      generalRevenue += gRev
-      shippingCost += p.shipping_cost
-      revenueWithoutShipping += (gRev - p.shipping_cost)
-      
+      generalRevenue += p.converted.gRev
+      shippingCost += p.converted.shipCost
+      revenueWithoutShipping += p.converted.rWithoutShip
       quantity += p.quantity
-      adSpend += p.ad_spend
-      totalProductsCost += (p.quantity * p.unit_cost_price)
+      adSpend += p.converted.adSpend
+      totalProductsCost += p.converted.cost
     })
 
     const profit = revenueWithoutShipping - totalProductsCost - adSpend
@@ -88,15 +108,11 @@ export default function DashboardClient({ performances }: { performances: any[] 
       }
       const day = dailyMap.get(d)!
       
-      const gRev = p.quantity * p.unit_selling_price
-      const rWithoutShip = gRev - p.shipping_cost
-      const cost = p.quantity * p.unit_cost_price
-      
-      day["CA Général"] += gRev
-      day["Livraison"] += p.shipping_cost
-      day["CA Hors Livr."] += rWithoutShip
-      day["Publicité"] += p.ad_spend
-      day["Bénéfice"] += (rWithoutShip - cost - p.ad_spend)
+      day["CA Général"] += p.converted.gRev
+      day["Livraison"] += p.converted.shipCost
+      day["CA Hors Livr."] += p.converted.rWithoutShip
+      day["Publicité"] += p.converted.adSpend
+      day["Bénéfice"] += p.converted.profit
     })
 
     const sorted = Array.from(dailyMap.values()).sort((a, b) => a.date.localeCompare(b.date))
@@ -111,14 +127,9 @@ export default function DashboardClient({ performances }: { performances: any[] 
     const map = new Map<string, number>()
     
     filteredPerformances.forEach(p => {
-      const gRev = p.quantity * p.unit_selling_price
-      const rWithoutShip = gRev - p.shipping_cost
-      const cost = p.quantity * p.unit_cost_price
-      const profit = rWithoutShip - cost - p.ad_spend
-      
-      if (profit > 0) {
+      if (p.converted.profit > 0) {
         const name = p.product_markets.products.name
-        map.set(name, (map.get(name) || 0) + profit)
+        map.set(name, (map.get(name) || 0) + p.converted.profit)
       }
     })
 
@@ -132,14 +143,9 @@ export default function DashboardClient({ performances }: { performances: any[] 
     const map = new Map<string, number>()
     
     filteredPerformances.forEach(p => {
-      const gRev = p.quantity * p.unit_selling_price
-      const rWithoutShip = gRev - p.shipping_cost
-      const cost = p.quantity * p.unit_cost_price
-      const profit = rWithoutShip - cost - p.ad_spend
-      
-      if (profit > 0) {
+      if (p.converted.profit > 0) {
         const country = p.product_markets.country
-        map.set(country, (map.get(country) || 0) + profit)
+        map.set(country, (map.get(country) || 0) + p.converted.profit)
       }
     })
 
@@ -155,11 +161,6 @@ export default function DashboardClient({ performances }: { performances: any[] 
     filteredPerformances.forEach(p => {
       const key = p.product_market_id
       
-      const gRev = p.quantity * p.unit_selling_price
-      const rWithoutShip = gRev - p.shipping_cost
-      const cost = p.quantity * p.unit_cost_price
-      const profit = rWithoutShip - cost - p.ad_spend
-      
       if (!map.has(key)) {
         map.set(key, { 
           product: p.product_markets.products.name, 
@@ -170,8 +171,8 @@ export default function DashboardClient({ performances }: { performances: any[] 
       }
       
       const item = map.get(key)!
-      item.profit += profit
-      item.revenueWithoutShipping += rWithoutShip
+      item.profit += p.converted.profit
+      item.revenueWithoutShipping += p.converted.rWithoutShip
     })
 
     return Array.from(map.values())
@@ -229,22 +230,22 @@ export default function DashboardClient({ performances }: { performances: any[] 
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         
         <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
           <div className="flex justify-between items-start mb-1">
             <span className="text-xs font-medium text-slate-500">CA Général</span>
             <DollarSign className="w-4 h-4 text-slate-400"/>
           </div>
-          <span className="text-lg font-bold text-slate-900">{formatFCFA(KPIs.generalRevenue)}</span>
+          <span className="text-lg font-bold text-slate-900">{formatCurrency(KPIs.generalRevenue, dynamicDisplayCurrency)}</span>
         </div>
 
         <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
           <div className="flex justify-between items-start mb-1">
-            <span className="text-xs font-medium text-slate-500">Livraison</span>
-            <Truck className="w-4 h-4 text-purple-500"/>
+            <span className="text-xs font-medium text-slate-500">Nombre de commandes livrées</span>
+            <Package className="w-4 h-4 text-blue-500"/>
           </div>
-          <span className="text-lg font-bold text-purple-600">-{formatFCFA(KPIs.shippingCost)}</span>
+          <span className="text-lg font-bold text-slate-900">{KPIs.quantity}</span>
         </div>
 
         <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
@@ -253,16 +254,8 @@ export default function DashboardClient({ performances }: { performances: any[] 
             <TrendingUp className={`w-4 h-4 ${KPIs.profit >= 0 ? 'text-green-500' : 'text-red-500'}`}/>
           </div>
           <span className={`text-lg font-bold ${KPIs.profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-            {formatFCFA(KPIs.profit)}
+            {formatCurrency(KPIs.profit, dynamicDisplayCurrency)}
           </span>
-        </div>
-
-        <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-          <div className="flex justify-between items-start mb-1">
-            <span className="text-xs font-medium text-slate-500">Articles Vendus</span>
-            <Package className="w-4 h-4 text-blue-500"/>
-          </div>
-          <span className="text-lg font-bold text-slate-900">{KPIs.quantity}</span>
         </div>
 
         <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
@@ -286,7 +279,7 @@ export default function DashboardClient({ performances }: { performances: any[] 
               <YAxis axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 12}} dx={-10} tickFormatter={(value) => value > 1000 ? (value/1000) + 'k' : value}/>
               <RechartsTooltip 
                 contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                formatter={(value: number) => formatFCFA(value)}
+                formatter={(value: number) => formatCurrency(value, dynamicDisplayCurrency)}
               />
               <Legend iconType="circle" wrapperStyle={{ paddingTop: '20px' }}/>
               <Line type="monotone" dataKey="CA Général" stroke="#94a3b8" strokeWidth={2} dot={false} strokeDasharray="5 5" />
@@ -311,7 +304,7 @@ export default function DashboardClient({ performances }: { performances: any[] 
                     <Pie data={profitByProduct} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={70} labelLine={false} label={renderCustomizedLabel}>
                       {profitByProduct.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
                     </Pie>
-                    <RechartsTooltip formatter={(value: number) => formatFCFA(value)} />
+                    <RechartsTooltip formatter={(value: number) => formatCurrency(value, dynamicDisplayCurrency)} />
                   </PieChart>
                 </ResponsiveContainer>
               </div>
@@ -337,7 +330,7 @@ export default function DashboardClient({ performances }: { performances: any[] 
                     <Pie data={profitByCountry} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={70} labelLine={false} label={renderCustomizedLabel}>
                       {profitByCountry.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
                     </Pie>
-                    <RechartsTooltip formatter={(value: number) => formatFCFA(value)} />
+                    <RechartsTooltip formatter={(value: number) => formatCurrency(value, dynamicDisplayCurrency)} />
                   </PieChart>
                 </ResponsiveContainer>
               </div>
@@ -381,9 +374,9 @@ export default function DashboardClient({ performances }: { performances: any[] 
                       <tr key={index} className="hover:bg-slate-50 transition text-sm">
                         <td className="py-3 px-4 font-bold text-slate-900">{item.product}</td>
                         <td className="py-3 px-4 text-slate-700">{item.country}</td>
-                        <td className="py-3 px-4 text-right text-slate-600">{formatFCFA(item.revenueWithoutShipping)}</td>
+                        <td className="py-3 px-4 text-right text-slate-600">{formatCurrency(item.revenueWithoutShipping, dynamicDisplayCurrency)}</td>
                         <td className={`py-3 px-4 text-right font-bold ${item.profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                          {item.profit > 0 ? '+' : ''}{formatFCFA(item.profit)}
+                          {item.profit > 0 ? '+' : ''}{formatCurrency(item.profit, dynamicDisplayCurrency)}
                         </td>
                         <td className="py-3 px-4 text-center">
                           <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold ${margin >= 20 ? 'bg-green-100 text-green-800' : margin >= 0 ? 'bg-amber-100 text-amber-800' : 'bg-red-100 text-red-800'}`}>

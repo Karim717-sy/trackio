@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { updatePerformance, deletePerformance } from "./actions"
+import { Pencil, Trash2 } from "lucide-react"
 
 export default function PerformanceRow({ perf }: { perf: any }) {
   const [isEditing, setIsEditing] = useState(false)
@@ -15,6 +16,20 @@ export default function PerformanceRow({ perf }: { perf: any }) {
   const [quantity, setQuantity] = useState(perf.quantity)
   const [revenue, setRevenue] = useState(initialRevenueWithoutShipping)
   const [adSpend, setAdSpend] = useState(perf.ad_spend)
+  
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+
+  const confirmDelete = async () => {
+    setIsDeleting(true)
+    try {
+      await deletePerformance(perf.id)
+    } catch (err) {
+      alert("Erreur lors de la suppression")
+    }
+    setIsDeleting(false)
+    setShowDeleteModal(false)
+  }
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -54,9 +69,9 @@ export default function PerformanceRow({ perf }: { perf: any }) {
             className="w-16 px-2 py-1 border border-slate-300 rounded text-sm"
           />
         </td>
-        <td className="py-4 px-3 text-right text-slate-500 whitespace-nowrap">{unitSellingPrice.toLocaleString('fr-FR')} F</td>
-        <td className="py-4 px-3 text-right font-medium text-slate-900 whitespace-nowrap">{(quantity * unitSellingPrice).toLocaleString('fr-FR')} F</td>
-        <td className="py-4 px-3 text-right text-slate-500 whitespace-nowrap">- {Math.max(0, (quantity * unitSellingPrice) - revenue).toLocaleString('fr-FR')} F</td>
+        <td className="py-4 px-3 text-right text-slate-500 whitespace-nowrap">{unitSellingPrice.toLocaleString('fr-FR')} {perf.product_markets.currency || 'XOF'}</td>
+        <td className="py-4 px-3 text-right font-medium text-slate-900 whitespace-nowrap">{(quantity * unitSellingPrice).toLocaleString('fr-FR')} {perf.product_markets.currency || 'XOF'}</td>
+        <td className="py-4 px-3 text-right text-slate-500 whitespace-nowrap">- {Math.max(0, (quantity * unitSellingPrice) - revenue).toLocaleString('fr-FR')} {perf.product_markets.currency || 'XOF'}</td>
         <td className="py-4 px-3">
           <input 
             type="number" 
@@ -65,7 +80,7 @@ export default function PerformanceRow({ perf }: { perf: any }) {
             className="w-24 px-2 py-1 border border-slate-300 rounded text-sm text-right"
           />
         </td>
-        <td className="py-4 px-3 text-right text-slate-600 whitespace-nowrap">- {(quantity * unitCostPrice).toLocaleString('fr-FR')} F</td>
+        <td className="py-4 px-3 text-right text-slate-600 whitespace-nowrap">- {(quantity * unitCostPrice).toLocaleString('fr-FR')} {perf.product_markets.currency || 'XOF'}</td>
         <td className="py-4 px-3">
           <input 
             type="number" 
@@ -94,6 +109,12 @@ export default function PerformanceRow({ perf }: { perf: any }) {
             Annuler
           </button>
         </td>
+        <td className="py-4 px-3 text-right text-slate-400 whitespace-nowrap text-xs">
+          {quantity > 0 ? (Math.max(0, (quantity * unitSellingPrice) - revenue) / quantity).toLocaleString('fr-FR', {maximumFractionDigits: 0}) : 0} {perf.product_markets.currency || 'XOF'}
+        </td>
+        <td className="py-4 px-3 text-right text-slate-400 whitespace-nowrap text-xs">
+          {quantity > 0 ? (adSpend / quantity).toLocaleString('fr-FR', {maximumFractionDigits: 0}) : 0} {perf.product_markets.currency || 'XOF'}
+        </td>
         <td className="py-4 px-2"></td>
       </tr>
     )
@@ -115,15 +136,15 @@ export default function PerformanceRow({ perf }: { perf: any }) {
         <span className="block text-xs text-slate-500 font-normal">{perf.product_markets.country}</span>
       </td>
       <td className="py-4 px-3 text-center text-slate-900 font-bold bg-slate-50/50">{perf.quantity}</td>
-      <td className="py-4 px-3 text-right text-slate-500 whitespace-nowrap">{unitSellingPrice.toLocaleString('fr-FR')} F</td>
-      <td className="py-4 px-3 text-right font-medium text-slate-900 whitespace-nowrap">{generalRevenue.toLocaleString('fr-FR')} F</td>
-      <td className="py-4 px-3 text-right text-slate-500 whitespace-nowrap">- {shippingCost.toLocaleString('fr-FR')} F</td>
-      <td className="py-4 px-3 text-right font-medium text-slate-900 bg-indigo-50/30 whitespace-nowrap">{revenueWithoutShipping.toLocaleString('fr-FR')} F</td>
-      <td className="py-4 px-3 text-right text-slate-600 whitespace-nowrap">- {productsCost.toLocaleString('fr-FR')} F</td>
-      <td className="py-4 px-3 text-right text-slate-600 whitespace-nowrap">- {perf.ad_spend.toLocaleString('fr-FR')} F</td>
+      <td className="py-4 px-3 text-right text-slate-500 whitespace-nowrap">{unitSellingPrice.toLocaleString('fr-FR')} {perf.product_markets.currency || 'XOF'}</td>
+      <td className="py-4 px-3 text-right font-medium text-slate-900 whitespace-nowrap">{generalRevenue.toLocaleString('fr-FR')} {perf.product_markets.currency || 'XOF'}</td>
+      <td className="py-4 px-3 text-right text-slate-500 whitespace-nowrap">- {shippingCost.toLocaleString('fr-FR')} {perf.product_markets.currency || 'XOF'}</td>
+      <td className="py-4 px-3 text-right font-medium text-slate-900 bg-indigo-50/30 whitespace-nowrap">{revenueWithoutShipping.toLocaleString('fr-FR')} {perf.product_markets.currency || 'XOF'}</td>
+      <td className="py-4 px-3 text-right text-slate-600 whitespace-nowrap">- {productsCost.toLocaleString('fr-FR')} {perf.product_markets.currency || 'XOF'}</td>
+      <td className="py-4 px-3 text-right text-slate-600 whitespace-nowrap">- {perf.ad_spend.toLocaleString('fr-FR')} {perf.product_markets.currency || 'XOF'}</td>
       
       <td className={`py-4 px-3 text-right font-bold whitespace-nowrap ${profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-        {profit > 0 ? '+' : ''}{profit.toLocaleString('fr-FR')} F
+        {profit > 0 ? '+' : ''}{profit.toLocaleString('fr-FR')} {perf.product_markets.currency || 'XOF'}
       </td>
       
       <td className="py-4 px-3 text-center">
@@ -132,20 +153,52 @@ export default function PerformanceRow({ perf }: { perf: any }) {
         </span>
       </td>
 
-      <td className="py-4 px-2 text-right whitespace-nowrap space-x-1">
+      <td className="py-4 px-3 text-right text-slate-400 whitespace-nowrap text-xs">{perf.quantity > 0 ? (shippingCost / perf.quantity).toLocaleString('fr-FR', {maximumFractionDigits: 0}) : 0} {perf.product_markets.currency || 'XOF'}</td>
+      <td className="py-4 px-3 text-right text-slate-400 whitespace-nowrap text-xs">{perf.quantity > 0 ? (perf.ad_spend / perf.quantity).toLocaleString('fr-FR', {maximumFractionDigits: 0}) : 0} {perf.product_markets.currency || 'XOF'}</td>
+
+      <td className="py-4 px-2 text-right whitespace-nowrap space-x-1 relative">
         <button 
           onClick={() => setIsEditing(true)}
-          className="text-slate-400 hover:text-blue-600 transition p-1" title="Modifier"
+          className="text-slate-400 hover:text-blue-600 transition p-1.5 rounded hover:bg-blue-50 inline-flex items-center" 
+          title="Modifier"
         >
-          ✏️
+          <Pencil className="w-4 h-4" />
         </button>
-        <form className="inline-block" action={async () => {
-          await deletePerformance(perf.id);
-        }}>
-          <button type="submit" className="text-slate-400 hover:text-red-600 transition p-1" title="Supprimer">
-            🗑️
-          </button>
-        </form>
+        <button 
+          className="text-slate-400 hover:text-red-600 transition p-1.5 rounded hover:bg-red-50 inline-flex items-center" 
+          title="Supprimer"
+          onClick={() => setShowDeleteModal(true)}
+        >
+          <Trash2 className="w-4 h-4" />
+        </button>
+
+        {/* Delete Confirmation Modal */}
+        {showDeleteModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+            <div className="bg-white rounded-xl shadow-lg w-full max-w-sm p-6 text-left transform transition-all">
+              <h3 className="text-lg font-bold text-slate-900">Supprimer la performance ?</h3>
+              <p className="mt-2 text-sm text-slate-500">
+                Êtes-vous sûr de vouloir supprimer cette ligne ? Cette action est irréversible.
+              </p>
+              <div className="mt-6 flex justify-end gap-3">
+                <button
+                  onClick={() => setShowDeleteModal(false)}
+                  className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition"
+                  disabled={isDeleting}
+                >
+                  Annuler
+                </button>
+                <button
+                  onClick={confirmDelete}
+                  className="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-lg hover:bg-red-700 transition flex items-center"
+                  disabled={isDeleting}
+                >
+                  {isDeleting ? 'Suppression...' : 'Supprimer'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </td>
     </tr>
   )

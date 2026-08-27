@@ -39,13 +39,15 @@ export default async function RentabilityPage() {
                     <th className="py-4 px-3 font-semibold text-slate-700 text-right">Pub</th>
                     <th className="py-4 px-3 font-semibold text-slate-700 text-right">Bénéfice</th>
                     <th className="py-4 px-3 font-semibold text-slate-700 text-center">Marge %</th>
+                    <th className="py-4 px-3 font-semibold text-slate-700 text-right">Frais livr. / pièce</th>
+                    <th className="py-4 px-3 font-semibold text-slate-700 text-right">CPA (Coût / Achat)</th>
                     <th className="py-4 px-2 font-semibold text-slate-700 text-right"></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {performances.length === 0 ? (
                     <tr>
-                      <td colSpan={12} className="py-8 text-center text-slate-500">
+                      <td colSpan={14} className="py-8 text-center text-slate-500">
                         Aucune donnée enregistrée pour le moment.
                       </td>
                     </tr>

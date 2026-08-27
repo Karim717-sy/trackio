@@ -46,6 +46,7 @@ export async function addProductMarket(formData: FormData) {
   let productId = formData.get('product_id') as string
   const newProductName = formData.get('new_product_name') as string
   const country = formData.get('country') as string
+  const currency = formData.get('currency') as string
   const selling_price = parseFloat(formData.get('selling_price') as string)
   const cost_price = parseFloat(formData.get('cost_price') as string)
 
@@ -69,6 +70,7 @@ export async function addProductMarket(formData: FormData) {
         user_id: user.id, 
         product_id: productId,
         country,
+        currency,
         selling_price, 
         cost_price 
       }

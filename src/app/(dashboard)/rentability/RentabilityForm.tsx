@@ -7,7 +7,11 @@ import CustomDatePicker from "./CustomDatePicker";
 export default function RentabilityForm({ markets }: { markets: any[] }) {
   const today = new Date().toISOString().split('T')[0]
   const [selectedDate, setSelectedDate] = useState(today)
+  const [selectedMarketId, setSelectedMarketId] = useState<string>('')
   const [error, setError] = useState<string | null>(null)
+
+  const selectedMarket = markets.find(m => m.id === selectedMarketId)
+  const currency = selectedMarket?.currency || 'XOF'
 
   async function handleSubmit(formData: FormData) {
     setError(null)
@@ -54,12 +58,13 @@ export default function RentabilityForm({ markets }: { markets: any[] }) {
             name="product_market_id" 
             required 
             className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 bg-white"
-            defaultValue=""
+            value={selectedMarketId}
+            onChange={(e) => setSelectedMarketId(e.target.value)}
           >
             <option value="" disabled>Sélectionnez un produit...</option>
             {markets.map(m => (
               <option key={m.id} value={m.id}>
-                {m.products.name} - {m.country} (Coût: {m.cost_price}F)
+                {m.products.name} - {m.country} (Coût: {m.cost_price} {m.currency || 'XOF'})
               </option>
             ))}
           </select>
@@ -75,18 +80,18 @@ export default function RentabilityForm({ markets }: { markets: any[] }) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1" htmlFor="revenue">CA hors livraison (encaissé net) en FCFA</label>
+          <label className="block text-sm font-medium text-slate-700 mb-1" htmlFor="revenue">CA hors livraison (encaissé net) en {currency}</label>
           <input 
-            id="revenue" name="revenue" type="number" required min="0" step="1"
+            id="revenue" name="revenue" type="number" required min="0" step="0.01"
             className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" 
             placeholder="Ex: 8000"
           />
         </div>
         
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1" htmlFor="ad_spend">Dépenses Publicitaires (FCFA)</label>
+          <label className="block text-sm font-medium text-slate-700 mb-1" htmlFor="ad_spend">Dépenses Publicitaires ({currency})</label>
           <input 
-            id="ad_spend" name="ad_spend" type="number" required min="0" step="1"
+            id="ad_spend" name="ad_spend" type="number" required min="0" step="0.01"
             className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" 
             placeholder="Ex: 35000"
           />

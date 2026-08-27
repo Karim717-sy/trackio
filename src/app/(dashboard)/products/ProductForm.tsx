@@ -4,15 +4,15 @@ import { useState } from "react"
 import { addProductMarket } from "./actions"
 import { COUNTRIES } from "@/utils/constants"
 
-export default function ProductForm({ existingProducts }: { existingProducts: any[] }) {
+export default function ProductForm({ existingProducts, mainCountry, mainCurrency }: { existingProducts: any[], mainCountry: string, mainCurrency: string }) {
   const [isNewProduct, setIsNewProduct] = useState(existingProducts.length === 0)
   const [error, setError] = useState<string | null>(null)
+  const [selectedCurrency, setSelectedCurrency] = useState(mainCurrency)
 
   async function handleSubmit(formData: FormData) {
     setError(null)
     try {
       await addProductMarket(formData)
-      // Optional: reset form or show success state
     } catch (e: any) {
       setError(e.message)
     }
@@ -59,31 +59,48 @@ export default function ProductForm({ existingProducts }: { existingProducts: an
           </div>
         )}
 
-        <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1" htmlFor="country">Pays / Marché</label>
-          <select 
-            id="country" name="country" required 
-            className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 bg-white"
-            defaultValue=""
-          >
-            <option value="" disabled>Sélectionnez un pays...</option>
-            {COUNTRIES.map(c => (
-              <option key={c} value={c}>{c}</option>
-            ))}
-          </select>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1" htmlFor="country">Pays / Marché</label>
+            <select 
+              id="country" name="country" required 
+              className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+              defaultValue={mainCountry || ""}
+            >
+              <option value="" disabled>Sélectionnez un pays...</option>
+              {COUNTRIES.map(c => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1" htmlFor="currency">Devise</label>
+            <select 
+              id="currency" name="currency" required 
+              className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+              value={selectedCurrency}
+              onChange={(e) => setSelectedCurrency(e.target.value)}
+            >
+              <option value="XOF">XOF</option>
+              <option value="XAF">XAF</option>
+              <option value="GNF">GNF</option>
+              <option value="EUR">EUR</option>
+              <option value="USD">USD</option>
+            </select>
+          </div>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1" htmlFor="selling_price">Prix de vente (FCFA)</label>
+          <label className="block text-sm font-medium text-slate-700 mb-1" htmlFor="selling_price">Prix de vente ({selectedCurrency})</label>
           <input 
-            id="selling_price" name="selling_price" type="number" required min="0" step="1"
+            id="selling_price" name="selling_price" type="number" required min="0" step="0.01"
             className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" 
             placeholder="Ex: 15000"
           />
         </div>
         
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1" htmlFor="cost_price">Coût de revient (FCFA)</label>
+          <label className="block text-sm font-medium text-slate-700 mb-1" htmlFor="cost_price">Coût de revient ({selectedCurrency})</label>
           <input 
             id="cost_price" name="cost_price" type="number" required min="0" step="1"
             className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" 

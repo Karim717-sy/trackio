@@ -15,6 +15,7 @@ export async function getPerformances() {
       product_markets (
         country,
         cost_price,
+        currency,
         products ( name )
       )
     `)

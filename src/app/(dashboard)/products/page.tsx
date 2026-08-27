@@ -1,10 +1,12 @@
-import { getProducts, getProductMarkets, addProduct, addProductMarket } from "./actions";
+import { getProducts, getProductMarkets } from "./actions";
 import ProductForm from "./ProductForm";
 import ProductMarketRow from "./ProductMarketRow";
+import { getUserProfile } from "@/app/(dashboard)/settings/actions";
 
 export default async function ProductsPage() {
   const products = await getProducts();
   const markets = await getProductMarkets();
+  const profile = await getUserProfile().catch(() => ({ main_country: 'Sénégal', main_currency: 'XOF' }));
 
   return (
     <div className="space-y-8">
@@ -17,7 +19,11 @@ export default async function ProductsPage() {
         
         {/* Formulaire (Client Component) */}
         <div className="xl:col-span-1">
-          <ProductForm existingProducts={products} />
+          <ProductForm 
+            existingProducts={products} 
+            mainCountry={profile.main_country} 
+            mainCurrency={profile.main_currency} 
+          />
         </div>
 
         {/* Liste des produits par marché */}
