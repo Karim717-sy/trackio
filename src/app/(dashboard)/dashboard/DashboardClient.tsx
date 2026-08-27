@@ -279,7 +279,7 @@ export default function DashboardClient({ performances, displayCurrency = 'XOF' 
               <YAxis axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 12}} dx={-10} tickFormatter={(value) => value > 1000 ? (value/1000) + 'k' : value}/>
               <RechartsTooltip 
                 contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                formatter={(value: number) => formatCurrency(value, dynamicDisplayCurrency)}
+                formatter={(value: any) => formatCurrency(Number(value), dynamicDisplayCurrency)}
               />
               <Legend iconType="circle" wrapperStyle={{ paddingTop: '20px' }}/>
               <Line type="monotone" dataKey="CA Général" stroke="#94a3b8" strokeWidth={2} dot={false} strokeDasharray="5 5" />
@@ -304,7 +304,7 @@ export default function DashboardClient({ performances, displayCurrency = 'XOF' 
                     <Pie data={profitByProduct} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={70} labelLine={false} label={renderCustomizedLabel}>
                       {profitByProduct.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
                     </Pie>
-                    <RechartsTooltip formatter={(value: number) => formatCurrency(value, dynamicDisplayCurrency)} />
+                    <RechartsTooltip formatter={(value: any) => formatCurrency(Number(value), dynamicDisplayCurrency)} />
                   </PieChart>
                 </ResponsiveContainer>
               </div>
@@ -330,7 +330,7 @@ export default function DashboardClient({ performances, displayCurrency = 'XOF' 
                     <Pie data={profitByCountry} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={70} labelLine={false} label={renderCustomizedLabel}>
                       {profitByCountry.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
                     </Pie>
-                    <RechartsTooltip formatter={(value: number) => formatCurrency(value, dynamicDisplayCurrency)} />
+                    <RechartsTooltip formatter={(value: any) => formatCurrency(Number(value), dynamicDisplayCurrency)} />
                   </PieChart>
                 </ResponsiveContainer>
               </div>
