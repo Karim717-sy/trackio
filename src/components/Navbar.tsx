@@ -24,7 +24,7 @@ export default function Navbar() {
               Connexion
             </Link>
             <Link href="/register" className="bg-indigo-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-indigo-700 transition shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
-              Essayer gratuitement
+              Inscription
             </Link>
           </div>
 
@@ -55,7 +55,7 @@ export default function Navbar() {
               Connexion
             </Link>
             <Link href="/register" onClick={() => setIsOpen(false)} className="block text-center bg-indigo-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-indigo-700">
-              Essayer gratuitement
+              Inscription
             </Link>
           </div>
         </div>
