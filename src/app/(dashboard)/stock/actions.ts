@@ -16,6 +16,8 @@ const addSupplySchema = z.object({
   total_purchase_price: z.coerce.number().min(0),
   shipping_cost: z.coerce.number().min(0),
   other_costs: z.coerce.number().min(0),
+  status: z.enum(['pending', 'partial', 'arrived', 'lost']).default('arrived'),
+  quantity_received: z.coerce.number().int().min(0).optional(),
 })
 
 export async function getSupplies() {
@@ -54,7 +56,13 @@ export async function addSupply(formData: FormData) {
   }
 
   let { product_market_id } = parsed.data
-  const { date, quantity, total_purchase_price, shipping_cost, other_costs, product_id, new_product_name, country, currency, selling_price } = parsed.data
+  const { date, quantity, total_purchase_price, shipping_cost, other_costs, product_id, new_product_name, country, currency, selling_price, status } = parsed.data
+  
+  let quantity_received = parsed.data.quantity_received;
+  if (quantity_received === undefined) {
+    if (status === 'arrived') quantity_received = quantity;
+    else quantity_received = 0;
+  }
 
   if (product_market_id === 'NEW') {
     if (!product_id || !country || !currency || selling_price === undefined) {
@@ -112,7 +120,9 @@ export async function addSupply(formData: FormData) {
         quantity,
         total_purchase_price,
         shipping_cost,
-        other_costs
+        other_costs,
+        status,
+        quantity_received
       }
     ])
 
@@ -179,14 +189,44 @@ export async function getStockOverview() {
 
     // A. Calcul Entrées & CMUP
     let totalSuppliedQuantity = 0
-    let totalInvested = 0
+    let totalInvestedForCmup = 0
+    
+    // Nouvelles variables pour les statistiques en attente
+    let pendingQuantity = 0
+    let pendingInvested = 0
+    let lostQuantity = 0
 
     marketSupplies.forEach(s => {
-      totalSuppliedQuantity += s.quantity
-      totalInvested += Number(s.total_purchase_price) + Number(s.shipping_cost) + Number(s.other_costs)
+      const totalSupplyCost = Number(s.total_purchase_price) + Number(s.shipping_cost) + Number(s.other_costs)
+      
+      // Stock disponible et calcul CMUP (basé uniquement sur ce qui est reçu)
+      if (s.quantity_received > 0 && s.status !== 'lost') {
+        totalSuppliedQuantity += s.quantity_received
+        
+        // Proratisation du coût : (Coût total / Qté commandée) * Qté reçue
+        const unitCost = totalSupplyCost / s.quantity
+        const receivedCost = unitCost * s.quantity_received
+        totalInvestedForCmup += receivedCost
+      }
+
+      // Stock en attente (Commandé ou partiel)
+      if (s.status === 'pending' || s.status === 'partial') {
+        const remainingQty = Math.max(0, s.quantity - s.quantity_received)
+        pendingQuantity += remainingQty
+        
+        const unitCost = totalSupplyCost / s.quantity
+        const remainingCost = unitCost * remainingQty
+        pendingInvested += remainingCost
+      }
+      
+      // Stock perdu
+      if (s.status === 'lost') {
+        const lostQty = Math.max(0, s.quantity - s.quantity_received)
+        lostQuantity += lostQty
+      }
     })
 
-    const cmup = totalSuppliedQuantity > 0 ? totalInvested / totalSuppliedQuantity : 0
+    const cmup = totalSuppliedQuantity > 0 ? totalInvestedForCmup / totalSuppliedQuantity : 0
 
     // B. Calcul Sorties (Livrées)
     let totalDeliveredQuantity = 0
@@ -223,12 +263,55 @@ export async function getStockOverview() {
       stockValue,
       potentialRevenue,
       potentialProfit,
-      totalInvested,
+      totalInvested: totalInvestedForCmup,
+      pendingQuantity,
+      pendingInvested,
+      lostQuantity,
       avgShippingPerUnit,
       avgAdSpendPerUnit
     }
   })
 
-  // Exclure les marchés qui n'ont jamais eu de stock pour ne pas encombrer la vue
-  return overview.filter(item => item.totalInvested > 0)
+  // Exclure les marchés qui n'ont jamais eu de stock ni de commande en cours pour ne pas encombrer la vue
+  return overview.filter(item => item.totalInvested > 0 || item.pendingQuantity > 0)
+}
+
+export async function markSupplyArrived(
+  id: string, 
+  quantityReceived: number, 
+  status: 'partial' | 'arrived' | 'lost',
+  additionalShippingCost: number = 0,
+  additionalOtherCosts: number = 0
+) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error("Non autorisé")
+
+  const { data: supply, error: fetchError } = await supabase
+    .from('supplies')
+    .select('shipping_cost, other_costs')
+    .eq('id', id)
+    .eq('user_id', user.id)
+    .single()
+
+  if (fetchError || !supply) {
+    throw new Error("Approvisionnement introuvable.")
+  }
+
+  const { error } = await supabase
+    .from('supplies')
+    .update({ 
+      quantity_received: quantityReceived, 
+      status,
+      shipping_cost: Number(supply.shipping_cost) + additionalShippingCost,
+      other_costs: Number(supply.other_costs) + additionalOtherCosts
+    })
+    .eq('id', id)
+    .eq('user_id', user.id)
+
+  if (error) {
+    console.error("Erreur markSupplyArrived:", error)
+    throw new Error("Impossible de mettre à jour le statut.")
+  }
+  revalidatePath('/stock')
 }

@@ -9,6 +9,7 @@ export default function SupplyForm({ markets }: { markets: any[] }) {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0])
   const [selectedMarketId, setSelectedMarketId] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [status, setStatus] = useState('arrived')
 
   const selectedMarket = markets.find(m => m.id === selectedMarketId)
   const [isNewMarket, setIsNewMarket] = useState(false)
@@ -60,6 +61,22 @@ export default function SupplyForm({ markets }: { markets: any[] }) {
             onChange={(val) => setSelectedDate(val)}
           />
           <input type="hidden" name="date" value={selectedDate} />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-1" htmlFor="status">Statut de l'approvisionnement</label>
+          <select 
+            id="status" 
+            name="status" 
+            required 
+            className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+            value={status}
+            onChange={(e) => setStatus(e.target.value)}
+          >
+            <option value="pending">Commandé / Non arrivé</option>
+            <option value="arrived">Arrivé</option>
+            <option value="lost">Perdu</option>
+          </select>
         </div>
 
         <div>
@@ -142,7 +159,7 @@ export default function SupplyForm({ markets }: { markets: any[] }) {
         )}
 
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1" htmlFor="quantity">Quantité reçue (Pièces)</label>
+          <label className="block text-sm font-medium text-slate-700 mb-1" htmlFor="quantity">Quantité (Pièces)</label>
           <input 
             id="quantity" name="quantity" type="number" required min="1" step="1"
             className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" 
@@ -159,30 +176,39 @@ export default function SupplyForm({ markets }: { markets: any[] }) {
           />
         </div>
         
-        <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1" htmlFor="shipping_cost">Transport Chine → Afrique ({currency})</label>
-          <input 
-            id="shipping_cost" name="shipping_cost" type="number" required min="0" step="0.01"
-            className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" 
-            placeholder="Ex: 30000"
-          />
-        </div>
+        {status !== 'pending' ? (
+          <>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1" htmlFor="shipping_cost">Transport Chine → Afrique ({currency})</label>
+              <input 
+                id="shipping_cost" name="shipping_cost" type="number" required min="0" step="0.01"
+                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" 
+                placeholder="Ex: 30000"
+              />
+            </div>
 
-        <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1" htmlFor="other_costs">Autres frais (Dédouanement, etc.) ({currency})</label>
-          <input 
-            id="other_costs" name="other_costs" type="number" required min="0" step="0.01"
-            className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" 
-            placeholder="Ex: 20000"
-            defaultValue="0"
-          />
-        </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1" htmlFor="other_costs">Autres frais (Dédouanement, etc.) ({currency})</label>
+              <input 
+                id="other_costs" name="other_costs" type="number" required min="0" step="0.01"
+                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" 
+                placeholder="Ex: 20000"
+                defaultValue="0"
+              />
+            </div>
+          </>
+        ) : (
+          <>
+            <input type="hidden" name="shipping_cost" value="0" />
+            <input type="hidden" name="other_costs" value="0" />
+          </>
+        )}
 
         <button 
           type="submit" 
           className="w-full bg-indigo-600 text-white font-semibold py-2.5 rounded-lg hover:bg-indigo-700 transition mt-4"
         >
-          Ajouter au stock
+          Enregistrer l'approvisionnement
         </button>
       </form>
     </div>

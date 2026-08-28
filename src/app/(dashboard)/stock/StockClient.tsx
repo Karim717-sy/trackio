@@ -35,6 +35,12 @@ export default function StockClient({ supplies, markets, overview }: { supplies:
   const totalPotentialRevenue = filteredOverview.reduce((acc, curr) => acc + convertCurrency(curr.potentialRevenue, curr.currency || 'XOF', displayCurrency), 0);
   const totalPotentialProfit = filteredOverview.reduce((acc, curr) => acc + convertCurrency(curr.potentialProfit, curr.currency || 'XOF', displayCurrency), 0);
   const totalItems = filteredOverview.reduce((acc, curr) => acc + curr.remainingStock, 0);
+  
+  const totalPendingQuantity = filteredOverview.reduce((acc, curr) => acc + (curr.pendingQuantity || 0), 0);
+  const totalPendingInvested = filteredOverview.reduce((acc, curr) => acc + convertCurrency(curr.pendingInvested || 0, curr.currency || 'XOF', displayCurrency), 0);
+
+  const pendingSupplies = filteredSupplies.filter(s => s.status === 'pending' || s.status === 'partial');
+  const pastSupplies = filteredSupplies.filter(s => s.status === 'arrived' || s.status === 'lost' || s.status === 'partial');
 
   return (
     <div className="space-y-8">
@@ -56,6 +62,24 @@ export default function StockClient({ supplies, markets, overview }: { supplies:
           />
         </div>
       </div>
+      
+      {/* KPIs Commandes en cours (si existantes) */}
+      {(totalPendingQuantity > 0 || totalPendingInvested > 0) && (
+        <div className="flex gap-4 p-4 bg-orange-50 rounded-xl border border-orange-100 shadow-sm">
+          <div className="flex-1">
+            <h3 className="text-sm font-medium text-orange-800">Commandes en cours</h3>
+            <p className="text-2xl font-bold text-orange-600 mt-1">{pendingSupplies.length}</p>
+          </div>
+          <div className="flex-1">
+            <h3 className="text-sm font-medium text-orange-800">Pièces en attente</h3>
+            <p className="text-2xl font-bold text-orange-600 mt-1">{totalPendingQuantity.toLocaleString()}</p>
+          </div>
+          <div className="flex-1">
+            <h3 className="text-sm font-medium text-orange-800">Capital Engagé (Attente)</h3>
+            <p className="text-2xl font-bold text-orange-600 mt-1">{totalPendingInvested.toLocaleString()} <span className="text-sm font-normal text-orange-500">{displayCurrency}</span></p>
+          </div>
+        </div>
+      )}
 
       {/* KPIs Globaux */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
@@ -147,10 +171,39 @@ export default function StockClient({ supplies, markets, overview }: { supplies:
         </div>
 
         {/* Historique des approvisionnements */}
-        <div className="xl:col-span-2">
+        <div className="xl:col-span-2 space-y-8">
+          
+          {pendingSupplies.length > 0 && (
+            <div className="bg-white rounded-xl shadow-sm border border-orange-200 overflow-hidden">
+              <div className="p-5 border-b border-orange-100 bg-orange-50/50 flex justify-between items-center">
+                <h2 className="text-lg font-bold text-orange-800">Commandes en cours (En attente)</h2>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-orange-50/30 border-b border-orange-100 text-sm">
+                      <th className="py-3 px-4 font-semibold text-slate-700">Date</th>
+                      <th className="py-3 px-4 font-semibold text-slate-700">Produit & Pays</th>
+                      <th className="py-3 px-4 font-semibold text-slate-700 text-center">Commandé</th>
+                      <th className="py-3 px-4 font-semibold text-slate-700 text-center">Reçu</th>
+                      <th className="py-3 px-4 font-semibold text-slate-700 text-center">Reste</th>
+                      <th className="py-3 px-4 font-semibold text-slate-700 text-right">Statut</th>
+                      <th className="py-3 px-4 font-semibold text-slate-700 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-orange-100">
+                    {pendingSupplies.map((supply) => (
+                      <SupplyRow key={supply.id} supply={supply} isPendingView={true} />
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
           <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
             <div className="p-5 border-b border-slate-100 bg-slate-50/50">
-              <h2 className="text-lg font-bold text-slate-800">Historique des approvisionnements</h2>
+              <h2 className="text-lg font-bold text-slate-800">Historique des arrivages & pertes</h2>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
@@ -158,21 +211,22 @@ export default function StockClient({ supplies, markets, overview }: { supplies:
                   <tr className="bg-slate-50 border-b border-slate-200 text-sm">
                     <th className="py-3 px-4 font-semibold text-slate-700">Date</th>
                     <th className="py-3 px-4 font-semibold text-slate-700">Produit & Pays</th>
-                    <th className="py-3 px-4 font-semibold text-slate-700 text-center">Quantité</th>
+                    <th className="py-3 px-4 font-semibold text-slate-700 text-center">Quantité Reçue/Perdue</th>
                     <th className="py-3 px-4 font-semibold text-slate-700 text-right">Coût Total</th>
                     <th className="py-3 px-4 font-semibold text-slate-700 text-right">Coût unitaire</th>
+                    <th className="py-3 px-4 font-semibold text-slate-700 text-right">Statut</th>
                     <th className="py-3 px-4 font-semibold text-slate-700 text-right"></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {filteredSupplies.length === 0 ? (
+                  {pastSupplies.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="py-8 text-center text-slate-500">
-                        Aucun approvisionnement enregistré.
+                      <td colSpan={7} className="py-8 text-center text-slate-500">
+                        Aucun historique disponible.
                       </td>
                     </tr>
                   ) : (
-                    filteredSupplies.map((supply) => (
+                    pastSupplies.map((supply) => (
                       <SupplyRow key={supply.id} supply={supply} />
                     ))
                   )}
