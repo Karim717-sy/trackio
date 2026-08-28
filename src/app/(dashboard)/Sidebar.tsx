@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { Menu, X, LogOut } from "lucide-react";
+import SubmitButton from "@/components/SubmitButton";
 
 export default function Sidebar({ logoutAction }: { logoutAction: () => void }) {
   const pathname = usePathname();
@@ -76,10 +77,13 @@ export default function Sidebar({ logoutAction }: { logoutAction: () => void }) 
             Paramètres
           </Link>
           <form action={logoutAction} className="pt-2">
-            <button type="submit" className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-400 hover:bg-red-500/10 hover:text-red-400 transition-colors font-medium group">
+            <SubmitButton 
+              className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-400 hover:bg-red-500/10 hover:text-red-400 transition-colors font-medium group"
+              pendingText="Déconnexion..."
+            >
               <LogOut className="w-5 h-5 text-slate-400 group-hover:text-red-400 transition-colors" />
               Se déconnecter
-            </button>
+            </SubmitButton>
           </form>
         </div>
       </aside>
