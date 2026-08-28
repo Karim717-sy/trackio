@@ -20,10 +20,10 @@ export default function Navbar() {
             <a href="#features" className="text-slate-600 hover:text-indigo-600 transition font-medium">Fonctionnalités</a>
           </div>
           <div className="hidden md:flex items-center space-x-4">
-            <Link href="/login" className="text-slate-600 hover:text-indigo-600 font-medium transition-transform transform hover:scale-105 active:scale-95">
+            <Link href="/login" className="inline-block text-slate-600 hover:text-indigo-600 font-medium transition-all duration-300 hover:scale-105 active:scale-95">
               Connexion
             </Link>
-            <Link href="/register" className="bg-indigo-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-indigo-700 transition-transform shadow-md hover:shadow-lg transform hover:scale-105 active:scale-95">
+            <Link href="/register" className="inline-block bg-indigo-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-indigo-700 shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105 active:scale-95">
               Inscription
             </Link>
           </div>
@@ -51,10 +51,10 @@ export default function Navbar() {
         <div className="md:hidden bg-white border-b border-slate-200 px-4 pt-2 pb-4 space-y-4 shadow-lg">
           <a href="#features" onClick={() => setIsOpen(false)} className="block text-slate-600 hover:text-indigo-600 font-medium">Fonctionnalités</a>
           <div className="border-t border-slate-100 pt-4 flex flex-col space-y-3">
-            <Link href="/login" onClick={() => setIsOpen(false)} className="block text-center text-slate-600 hover:text-indigo-600 font-medium active:scale-95 transition-transform transform hover:scale-105">
+            <Link href="/login" onClick={() => setIsOpen(false)} className="block text-center text-slate-600 hover:text-indigo-600 font-medium transition-all duration-300 hover:scale-105 active:scale-95">
               Connexion
             </Link>
-            <Link href="/register" onClick={() => setIsOpen(false)} className="block text-center bg-indigo-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-indigo-700 active:scale-95 transition-transform transform hover:scale-105">
+            <Link href="/register" onClick={() => setIsOpen(false)} className="block text-center bg-indigo-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-indigo-700 shadow-sm transition-all duration-300 hover:scale-105 active:scale-95">
               Inscription
             </Link>
           </div>
