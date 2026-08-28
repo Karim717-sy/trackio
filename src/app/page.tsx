@@ -26,10 +26,10 @@ export default function LandingPage() {
               Suivez vos ventes, vos dépenses publicitaires et calculez vos bénéfices réels au FCFA près. Fini les Google Sheets compliqués.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <Link href="/register" className="px-8 py-4 bg-indigo-600 text-white font-bold rounded-xl shadow-xl hover:bg-indigo-700 hover:shadow-indigo-500/30 transition transform hover:-translate-y-1 text-lg w-full sm:w-auto">
+              <Link href="/register" className="px-8 py-4 bg-indigo-600 text-white font-bold rounded-xl shadow-xl hover:bg-indigo-700 hover:shadow-indigo-500/30 transition transform hover:-translate-y-1 active:scale-95 text-lg w-full sm:w-auto">
                 Commencer gratuitement
               </Link>
-              <Link href="#problem" className="px-8 py-4 bg-white text-slate-700 font-bold rounded-xl border border-slate-200 shadow-sm hover:bg-slate-50 transition text-lg w-full sm:w-auto">
+              <Link href="#problem" className="px-8 py-4 bg-white text-slate-700 font-bold rounded-xl border border-slate-200 shadow-sm hover:bg-slate-50 transition active:scale-95 text-lg w-full sm:w-auto">
                 Découvrir la solution
               </Link>
             </div>
@@ -169,7 +169,7 @@ export default function LandingPage() {
             <p className="text-xl text-indigo-100 mb-10 max-w-2xl mx-auto">
               Rejoignez Trackio dès aujourd'hui et prenez le contrôle total sur la rentabilité de vos produits. Fini l'improvisation.
             </p>
-            <Link href="/register" className="inline-block px-10 py-5 bg-white text-indigo-700 font-bold rounded-xl shadow-2xl hover:bg-slate-50 transition transform hover:scale-105 text-lg">
+            <Link href="/register" className="inline-block px-10 py-5 bg-white text-indigo-700 font-bold rounded-xl shadow-2xl hover:bg-slate-50 transition transform hover:scale-105 active:scale-95 text-lg">
               Créer mon compte Trackio
             </Link>
           </div>
