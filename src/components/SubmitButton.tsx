@@ -14,7 +14,7 @@ export default function SubmitButton({ children, pendingText, className, ...prop
       {...props} 
       type="submit" 
       disabled={pending || props.disabled}
-      className={`${className} ${pending ? 'opacity-70 cursor-not-allowed' : ''}`}
+      className={`transition-transform transform hover:scale-105 active:scale-95 ${className} ${pending ? 'opacity-70 cursor-not-allowed hover:scale-100' : ''}`}
     >
       {pending ? (
         <span className="flex items-center justify-center gap-2">
