@@ -6,15 +6,20 @@ import {
   LineChart, Line, PieChart, Pie, Cell
 } from 'recharts'
 import { DollarSign, TrendingUp, TrendingDown, Package, Activity, Percent, Truck } from 'lucide-react'
+import { format } from 'date-fns'
+import { fr } from 'date-fns/locale'
 
 import { convertCurrency, formatCurrency } from '@/utils/currencies'
 const COLORS = ['#4f46e5', '#0ea5e9', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#f43f5e']
 
 import CustomDropdown from './CustomDropdown'
+import DateRangePicker from '@/components/DateRangePicker'
 
 export default function DashboardClient({ performances, displayCurrency = 'XOF' }: { performances: any[], displayCurrency?: string }) {
   const [period, setPeriod] = useState('30d')
   const [countryFilter, setCountryFilter] = useState('All')
+  const [customRange, setCustomRange] = useState<{from: Date | undefined, to: Date | undefined}>({ from: undefined, to: undefined })
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false)
 
   // Extraire les pays
   const availableCountries = useMemo(() => {
@@ -22,6 +27,20 @@ export default function DashboardClient({ performances, displayCurrency = 'XOF' 
     performances.forEach(p => countries.add(p.product_markets.country))
     return Array.from(countries).sort()
   }, [performances])
+
+  const customLabel = useMemo(() => {
+    if (period !== 'custom') return "Personnalisé";
+    if (customRange.from && customRange.to) {
+      if (customRange.from.getTime() === customRange.to.getTime()) {
+        return format(customRange.from, 'd MMM yyyy', { locale: fr });
+      }
+      return `${format(customRange.from, 'd MMM')} - ${format(customRange.to, 'd MMM yyyy', { locale: fr })}`;
+    }
+    if (customRange.from) {
+      return format(customRange.from, 'd MMM yyyy', { locale: fr });
+    }
+    return "Personnalisé";
+  }, [period, customRange]);
 
   // Devise d'affichage dynamique : si un pays est sélectionné, on affiche dans la devise de ce pays
   const dynamicDisplayCurrency = useMemo(() => {
@@ -51,8 +70,23 @@ export default function DashboardClient({ performances, displayCurrency = 'XOF' 
         if (d < startLastMonth || d > endLastMonth) return false
       } else if (period === 'today' || period === 'yesterday') {
         if (d.toISOString().split('T')[0] !== startDate.toISOString().split('T')[0]) return false
+      } else if (period === 'custom') {
+        if (customRange.from && customRange.to) {
+          // Range selection
+          const dTime = d.getTime();
+          const fromTime = new Date(customRange.from.getFullYear(), customRange.from.getMonth(), customRange.from.getDate()).getTime();
+          const toTime = new Date(customRange.to.getFullYear(), customRange.to.getMonth(), customRange.to.getDate()).getTime();
+          if (dTime < fromTime || dTime > toTime) return false;
+        } else if (customRange.from) {
+          // Single day selection
+          const dTime = d.getTime();
+          const fromTime = new Date(customRange.from.getFullYear(), customRange.from.getMonth(), customRange.from.getDate()).getTime();
+          if (dTime !== fromTime) return false;
+        } else {
+          return true; // No date selected yet
+        }
       } else {
-        if (d < startDate) return false
+        if (d < startDate && period !== 'all') return false
       }
       return countryFilter === 'All' || p.product_markets.country === countryFilter
     }).map(p => {
@@ -71,7 +105,7 @@ export default function DashboardClient({ performances, displayCurrency = 'XOF' 
         }
       }
     })
-  }, [performances, period, countryFilter, dynamicDisplayCurrency])
+  }, [performances, period, countryFilter, dynamicDisplayCurrency, customRange])
 
   // KPIs
   const KPIs = useMemo(() => {
@@ -203,19 +237,33 @@ export default function DashboardClient({ performances, displayCurrency = 'XOF' 
         </div>
         
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">
-          <CustomDropdown 
-            value={period}
-            onChange={setPeriod}
-            icon="📅"
-            options={[
-              {label: "Aujourd'hui", value: "today"},
-              {label: "Hier", value: "yesterday"},
-              {label: "7 derniers jours", value: "7d"},
-              {label: "30 derniers jours", value: "30d"},
-              {label: "Ce mois-ci", value: "this_month"},
-              {label: "Mois précédent", value: "last_month"},
-              {label: "Depuis toujours", value: "all"}
-            ]}
+          <DateRangePicker 
+            value={customRange}
+            onChange={setCustomRange}
+            isOpenProp={isCalendarOpen}
+            setIsOpenProp={setIsCalendarOpen}
+            trigger={
+              <CustomDropdown 
+                value={period}
+                onChange={(val) => {
+                  setPeriod(val);
+                  if (val === 'custom') {
+                    setIsCalendarOpen(true);
+                  }
+                }}
+                icon="📅"
+                options={[
+                  {label: "Aujourd'hui", value: "today"},
+                  {label: "Hier", value: "yesterday"},
+                  {label: "7 derniers jours", value: "7d"},
+                  {label: "30 derniers jours", value: "30d"},
+                  {label: "Ce mois-ci", value: "this_month"},
+                  {label: "Mois précédent", value: "last_month"},
+                  {label: customLabel, value: "custom"},
+                  {label: "Depuis toujours", value: "all"}
+                ]}
+              />
+            }
           />
           
           <CustomDropdown 

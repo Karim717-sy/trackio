@@ -13,6 +13,7 @@ export default function SupplyRow({ supply, isPendingView = false }: { supply: a
   const [isArriving, setIsArriving] = useState(false)
   const [additionalShipping, setAdditionalShipping] = useState(0)
   const [additionalOther, setAdditionalOther] = useState(0)
+  const [arrivalDate, setArrivalDate] = useState(new Date().toISOString().split('T')[0])
 
   const currency = supply.product_markets?.currency || 'FCFA'
   
@@ -45,7 +46,7 @@ export default function SupplyRow({ supply, isPendingView = false }: { supply: a
          // if they submit 0, nothing changes unless they want to mark as lost, but we'll assume they just close modal
       }
 
-      await markSupplyArrived(supply.id, totalNowReceived, newStatus, additionalShipping, additionalOther)
+      await markSupplyArrived(supply.id, totalNowReceived, newStatus, additionalShipping, additionalOther, arrivalDate)
       setShowArrivalModal(false)
     } catch (e) {
       console.error(e)
@@ -57,7 +58,7 @@ export default function SupplyRow({ supply, isPendingView = false }: { supply: a
   async function markAsLost() {
     setIsArriving(true)
     try {
-      await markSupplyArrived(supply.id, supply.quantity_received, 'lost')
+      await markSupplyArrived(supply.id, supply.quantity_received, 'lost', 0, 0, arrivalDate)
       setShowArrivalModal(false)
     } catch (e) {
       console.error(e)
@@ -66,7 +67,8 @@ export default function SupplyRow({ supply, isPendingView = false }: { supply: a
     setIsArriving(false)
   }
 
-  const dateFormatee = new Date(supply.date).toLocaleDateString('fr-FR', {
+  const dateToDisplay = supply.arrival_date ? supply.arrival_date : supply.date;
+  const dateFormatee = new Date(dateToDisplay).toLocaleDateString('fr-FR', {
     day: '2-digit',
     month: 'long',
     year: 'numeric'
@@ -117,7 +119,7 @@ export default function SupplyRow({ supply, isPendingView = false }: { supply: a
                 <form onSubmit={confirmArrival}>
                   <div className="mb-4">
                     <label className="block text-sm font-medium text-slate-700 mb-1">
-                      Quantité reçue aujourd'hui
+                      Quantité reçue
                     </label>
                     <input 
                       type="number" 
@@ -131,6 +133,20 @@ export default function SupplyRow({ supply, isPendingView = false }: { supply: a
                     <p className="text-xs text-slate-500 mt-1">Reste en attente : {remaining}</p>
                   </div>
                   
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      Date de réception
+                    </label>
+                    <input 
+                      type="date" 
+                      required
+                      value={arrivalDate}
+                      onChange={e => setArrivalDate(e.target.value)}
+                      max={new Date().toISOString().split('T')[0]}
+                      className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                    />
+                  </div>
+
                   <div className="mb-4">
                     <label className="block text-sm font-medium text-slate-700 mb-1">
                       Frais de transport ({currency})

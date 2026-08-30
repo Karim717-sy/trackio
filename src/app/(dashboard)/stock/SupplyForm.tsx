@@ -54,71 +54,118 @@ export default function SupplyForm({ markets }: { markets: any[] }) {
 
       <form action={handleSubmit} className="space-y-4">
         
-        <div className="relative">
-          <label className="block text-sm font-medium text-slate-700 mb-1" htmlFor="date">Date</label>
-          <CustomDatePicker 
-            value={selectedDate}
-            onChange={(val) => setSelectedDate(val)}
-          />
-          <input type="hidden" name="date" value={selectedDate} />
-        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 items-end">
+          <div className="relative">
+            <label className="block text-sm font-medium text-slate-700 mb-1" htmlFor="date">Date</label>
+            <CustomDatePicker 
+              value={selectedDate}
+              onChange={(val) => setSelectedDate(val)}
+            />
+            <input type="hidden" name="date" value={selectedDate} />
+          </div>
 
-        <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1" htmlFor="status">Statut de l'approvisionnement</label>
-          <select 
-            id="status" 
-            name="status" 
-            required 
-            className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 bg-white"
-            value={status}
-            onChange={(e) => setStatus(e.target.value)}
-          >
-            <option value="pending">Commandé / Non arrivé</option>
-            <option value="arrived">Arrivé</option>
-            <option value="lost">Perdu</option>
-          </select>
-        </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1" htmlFor="status">Statut de l'approvisionnement</label>
+            <select 
+              id="status" 
+              name="status" 
+              required 
+              className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+              value={status}
+              onChange={(e) => setStatus(e.target.value)}
+            >
+              <option value="pending">Commandé / Non arrivé</option>
+              <option value="arrived">Arrivé</option>
+              <option value="lost">Perdu</option>
+            </select>
+          </div>
 
-        <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1" htmlFor="product_market_id">Produit & Marché</label>
-          <select 
-            id="product_market_id" 
-            name="product_market_id" 
-            required 
-            className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 bg-white"
-            value={selectedMarketId}
-            onChange={(e) => {
-              setSelectedMarketId(e.target.value)
-              setIsNewMarket(e.target.value === 'NEW')
-            }}
-          >
-            <option value="" disabled>Sélectionnez un marché...</option>
-            <option value="NEW" className="font-bold text-indigo-600">➕ Créer un nouveau produit / marché</option>
-            {markets.map(m => (
-              <option key={m.id} value={m.id}>
-                {m.products?.name} - {m.country}
-              </option>
-            ))}
-          </select>
+          <div className="xl:col-span-2">
+            <label className="block text-sm font-medium text-slate-700 mb-1" htmlFor="product_market_id">Produit & Marché</label>
+            <select 
+              id="product_market_id" 
+              name="product_market_id" 
+              required 
+              className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+              value={selectedMarketId}
+              onChange={(e) => {
+                setSelectedMarketId(e.target.value)
+                setIsNewMarket(e.target.value === 'NEW')
+              }}
+            >
+              <option value="" disabled>Sélectionnez un marché...</option>
+              <option value="NEW" className="font-bold text-indigo-600">➕ Créer un nouveau produit / marché</option>
+              {markets.map(m => (
+                <option key={m.id} value={m.id}>
+                  {m.products?.name} - {m.country}
+                </option>
+              ))}
+            </select>
+          </div>
+        
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1" htmlFor="quantity">Quantité (Pièces)</label>
+            <input 
+              id="quantity" name="quantity" type="number" required min="1" step="1"
+              className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" 
+              placeholder="Ex: 100"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1" htmlFor="total_purchase_price">Prix d'achat TOTAL ({currency})</label>
+            <input 
+              id="total_purchase_price" name="total_purchase_price" type="number" required min="0" step="0.01"
+              className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" 
+              placeholder="Ex: 150000"
+            />
+          </div>
+          
+          {status !== 'pending' ? (
+            <>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1" htmlFor="shipping_cost">Transport ({currency})</label>
+                <input 
+                  id="shipping_cost" name="shipping_cost" type="number" required min="0" step="0.01"
+                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" 
+                  placeholder="Ex: 30000"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1" htmlFor="other_costs">Autres frais ({currency})</label>
+                <input 
+                  id="other_costs" name="other_costs" type="number" required min="0" step="0.01"
+                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" 
+                  placeholder="Ex: 20000"
+                  defaultValue="0"
+                />
+              </div>
+            </>
+          ) : (
+            <>
+              <input type="hidden" name="shipping_cost" value="0" />
+              <input type="hidden" name="other_costs" value="0" />
+            </>
+          )}
         </div>
 
         {isNewMarket && (
-          <div className="p-4 bg-indigo-50 border border-indigo-100 rounded-lg space-y-4 mb-4">
-            <h3 className="text-sm font-bold text-indigo-800">Détails du nouveau produit / marché</h3>
+          <div className="p-4 mt-4 bg-indigo-50 border border-indigo-100 rounded-lg">
+            <h3 className="text-sm font-bold text-indigo-800 mb-3">Détails du nouveau produit / marché</h3>
             
-            {/* On force la création d'un nouveau produit (product_id = NEW) de manière invisible */}
             <input type="hidden" name="product_id" value="NEW" />
 
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1" htmlFor="new_product_name">Nom du produit</label>
-              <input 
-                id="new_product_name" name="new_product_name" type="text" required={isNewMarket}
-                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" 
-                placeholder="Ex: Montre connectée"
-              />
-            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 items-end">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1" htmlFor="new_product_name">Nom du produit</label>
+                <input 
+                  id="new_product_name" name="new_product_name" type="text" required={isNewMarket}
+                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" 
+                  placeholder="Ex: Montre connectée"
+                />
+              </div>
 
-            <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1" htmlFor="country">Pays / Marché</label>
                 <select 
@@ -131,6 +178,7 @@ export default function SupplyForm({ markets }: { markets: any[] }) {
                   ))}
                 </select>
               </div>
+
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1" htmlFor="currency">Devise</label>
                 <select 
@@ -146,70 +194,27 @@ export default function SupplyForm({ markets }: { markets: any[] }) {
                   <option value="USD">USD</option>
                 </select>
               </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1" htmlFor="selling_price">Prix de vente cible</label>
-              <input 
-                id="selling_price" name="selling_price" type="number" required={isNewMarket} min="0" step="0.01"
-                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" 
-                placeholder="Ex: 25000"
-              />
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1" htmlFor="selling_price">Prix de vente cible</label>
+                <input 
+                  id="selling_price" name="selling_price" type="number" required={isNewMarket} min="0" step="0.01"
+                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" 
+                  placeholder="Ex: 25000"
+                />
+              </div>
             </div>
           </div>
         )}
 
-        <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1" htmlFor="quantity">Quantité (Pièces)</label>
-          <input 
-            id="quantity" name="quantity" type="number" required min="1" step="1"
-            className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" 
-            placeholder="Ex: 100"
-          />
+        <div className="flex justify-end mt-6">
+          <button 
+            type="submit" 
+            className="w-full md:w-auto px-8 bg-indigo-600 text-white font-semibold py-2.5 rounded-lg hover:bg-indigo-700 transition"
+          >
+            Enregistrer l'approvisionnement
+          </button>
         </div>
-
-        <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1" htmlFor="total_purchase_price">Prix d'achat TOTAL en Chine ({currency})</label>
-          <input 
-            id="total_purchase_price" name="total_purchase_price" type="number" required min="0" step="0.01"
-            className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" 
-            placeholder="Ex: 150000"
-          />
-        </div>
-        
-        {status !== 'pending' ? (
-          <>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1" htmlFor="shipping_cost">Transport Chine → Afrique ({currency})</label>
-              <input 
-                id="shipping_cost" name="shipping_cost" type="number" required min="0" step="0.01"
-                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" 
-                placeholder="Ex: 30000"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1" htmlFor="other_costs">Autres frais (Dédouanement, etc.) ({currency})</label>
-              <input 
-                id="other_costs" name="other_costs" type="number" required min="0" step="0.01"
-                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" 
-                placeholder="Ex: 20000"
-                defaultValue="0"
-              />
-            </div>
-          </>
-        ) : (
-          <>
-            <input type="hidden" name="shipping_cost" value="0" />
-            <input type="hidden" name="other_costs" value="0" />
-          </>
-        )}
-
-        <button 
-          type="submit" 
-          className="w-full bg-indigo-600 text-white font-semibold py-2.5 rounded-lg hover:bg-indigo-700 transition mt-4"
-        >
-          Enregistrer l'approvisionnement
-        </button>
       </form>
     </div>
   )

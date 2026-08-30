@@ -32,3 +32,12 @@ ADD COLUMN IF NOT EXISTS quantity_received integer NOT NULL DEFAULT 0;
 
 -- Mise à jour des anciennes données pour qu'elles soient considérées comme déjà arrivées en stock
 UPDATE public.supplies SET quantity_received = quantity WHERE quantity_received = 0 AND status = 'arrived';
+
+-- ==========================================
+-- UPDATE 2 : MIGRATION POUR LA DATE D'ARRIVÉE
+-- ==========================================
+ALTER TABLE public.supplies 
+ADD COLUMN IF NOT EXISTS arrival_date date;
+
+-- Optionnel: Mettre à jour les anciennes données pour qu'elles aient la date de commande comme date d'arrivée
+UPDATE public.supplies SET arrival_date = date WHERE arrival_date IS NULL AND status IN ('arrived', 'partial');

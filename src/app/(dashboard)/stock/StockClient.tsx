@@ -163,15 +163,15 @@ export default function StockClient({ supplies, markets, overview }: { supplies:
       </div>
 
       {/* Section Approvisionnements */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+      <div className="space-y-8">
         
         {/* Formulaire */}
-        <div className="xl:col-span-1">
+        <div className="w-full">
           <SupplyForm markets={markets} />
         </div>
 
         {/* Historique des approvisionnements */}
-        <div className="xl:col-span-2 space-y-8">
+        <div className="w-full space-y-8">
           
           {pendingSupplies.length > 0 && (
             <div className="bg-white rounded-xl shadow-sm border border-orange-200 overflow-hidden">

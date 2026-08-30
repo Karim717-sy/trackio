@@ -281,7 +281,8 @@ export async function markSupplyArrived(
   quantityReceived: number, 
   status: 'partial' | 'arrived' | 'lost',
   additionalShippingCost: number = 0,
-  additionalOtherCosts: number = 0
+  additionalOtherCosts: number = 0,
+  arrivalDate?: string
 ) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -298,14 +299,20 @@ export async function markSupplyArrived(
     throw new Error("Approvisionnement introuvable.")
   }
 
+  const updateData: any = { 
+    quantity_received: quantityReceived, 
+    status,
+    shipping_cost: Number(supply.shipping_cost) + additionalShippingCost,
+    other_costs: Number(supply.other_costs) + additionalOtherCosts
+  }
+
+  if (arrivalDate) {
+    updateData.arrival_date = arrivalDate;
+  }
+
   const { error } = await supabase
     .from('supplies')
-    .update({ 
-      quantity_received: quantityReceived, 
-      status,
-      shipping_cost: Number(supply.shipping_cost) + additionalShippingCost,
-      other_costs: Number(supply.other_costs) + additionalOtherCosts
-    })
+    .update(updateData)
     .eq('id', id)
     .eq('user_id', user.id)
 
