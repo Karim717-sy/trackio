@@ -14,15 +14,15 @@ export default async function RentabilityPage() {
         <p className="text-slate-600 mt-2">Saisissez vos performances journalières pour suivre votre rentabilité réelle.</p>
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-4 gap-8">
+      <div className="space-y-8">
         
         {/* Formulaire (Client Component) */}
-        <div className="xl:col-span-1">
+        <div className="w-full">
           <RentabilityForm markets={markets} />
         </div>
 
         {/* Historique des saisies */}
-        <div className="xl:col-span-3">
+        <div className="w-full">
           <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">

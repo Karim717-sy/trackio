@@ -42,67 +42,71 @@ export default function RentabilityForm({ markets }: { markets: any[] }) {
 
       <form action={handleSubmit} className="space-y-4">
         
-        <div className="relative">
-          <label className="block text-sm font-medium text-slate-700 mb-1" htmlFor="date">Date</label>
-          <CustomDatePicker 
-            value={selectedDate}
-            onChange={(val) => setSelectedDate(val)}
-          />
-          <input type="hidden" name="date" value={selectedDate} />
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4 items-end">
+          <div className="relative">
+            <label className="block text-sm font-medium text-slate-700 mb-1" htmlFor="date">Date</label>
+            <CustomDatePicker 
+              value={selectedDate}
+              onChange={(val) => setSelectedDate(val)}
+            />
+            <input type="hidden" name="date" value={selectedDate} />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1" htmlFor="product_market_id">Produit & Marché</label>
+            <select 
+              id="product_market_id" 
+              name="product_market_id" 
+              required 
+              className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+              value={selectedMarketId}
+              onChange={(e) => setSelectedMarketId(e.target.value)}
+            >
+              <option value="" disabled>Sélectionnez un produit...</option>
+              {markets.map(m => (
+                <option key={m.id} value={m.id}>
+                  {m.products.name} - {m.country} (Coût: {m.cost_price} {m.currency || 'XOF'})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1" htmlFor="quantity">Nbre de pièces livrées</label>
+            <input 
+              id="quantity" name="quantity" type="number" required min="0" step="1"
+              className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" 
+              placeholder="Ex: 15"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1" htmlFor="revenue">CA hors livraison en {currency}</label>
+            <input 
+              id="revenue" name="revenue" type="number" required min="0" step="0.01"
+              className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" 
+              placeholder="Ex: 8000"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1" htmlFor="ad_spend">Dépenses Pub ({currency})</label>
+            <input 
+              id="ad_spend" name="ad_spend" type="number" required min="0" step="0.01"
+              className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" 
+              placeholder="Ex: 35000"
+            />
+          </div>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1" htmlFor="product_market_id">Produit & Marché</label>
-          <select 
-            id="product_market_id" 
-            name="product_market_id" 
-            required 
-            className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 bg-white"
-            value={selectedMarketId}
-            onChange={(e) => setSelectedMarketId(e.target.value)}
+        <div className="flex justify-end mt-4">
+          <button 
+            type="submit" 
+            className="w-full md:w-auto px-8 bg-indigo-600 text-white font-semibold py-2.5 rounded-lg hover:bg-indigo-700 transition mt-2"
           >
-            <option value="" disabled>Sélectionnez un produit...</option>
-            {markets.map(m => (
-              <option key={m.id} value={m.id}>
-                {m.products.name} - {m.country} (Coût: {m.cost_price} {m.currency || 'XOF'})
-              </option>
-            ))}
-          </select>
+            Enregistrer
+          </button>
         </div>
-
-        <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1" htmlFor="quantity">Nombre de pièces livrées</label>
-          <input 
-            id="quantity" name="quantity" type="number" required min="0" step="1"
-            className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" 
-            placeholder="Ex: 15"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1" htmlFor="revenue">CA hors livraison (encaissé net) en {currency}</label>
-          <input 
-            id="revenue" name="revenue" type="number" required min="0" step="0.01"
-            className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" 
-            placeholder="Ex: 8000"
-          />
-        </div>
-        
-        <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1" htmlFor="ad_spend">Dépenses Publicitaires ({currency})</label>
-          <input 
-            id="ad_spend" name="ad_spend" type="number" required min="0" step="0.01"
-            className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" 
-            placeholder="Ex: 35000"
-          />
-        </div>
-
-        <button 
-          type="submit" 
-          className="w-full bg-indigo-600 text-white font-semibold py-2.5 rounded-lg hover:bg-indigo-700 transition mt-2"
-        >
-          Enregistrer
-        </button>
       </form>
     </div>
   )
