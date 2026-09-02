@@ -1,11 +1,21 @@
 import { getPerformances } from "./actions";
 import { getProductMarkets } from "../products/actions";
+import { getStockOverview } from "../stock/actions";
 import RentabilityForm from "./RentabilityForm";
 import PerformanceRow from "./PerformanceRow";
 
 export default async function RentabilityPage() {
   const performances = await getPerformances();
   const markets = await getProductMarkets();
+  const overview = await getStockOverview();
+
+  const marketsWithCmup = markets.map((m: any) => {
+    const stockData = overview.find((o: any) => o.market_id === m.id);
+    return {
+      ...m,
+      cmup: stockData && stockData.cmup > 0 ? stockData.cmup : m.cost_price
+    };
+  });
 
   return (
     <div className="space-y-8">
@@ -18,7 +28,7 @@ export default async function RentabilityPage() {
         
         {/* Formulaire (Client Component) */}
         <div className="w-full">
-          <RentabilityForm markets={markets} />
+          <RentabilityForm markets={marketsWithCmup} />
         </div>
 
         {/* Historique des saisies */}

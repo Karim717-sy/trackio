@@ -68,7 +68,11 @@ export async function addPerformance(formData: FormData) {
     throw new Error("Impossible de récupérer les informations du produit.")
   }
 
-  const unit_cost_price = marketData.cost_price;
+  const { getStockOverview } = await import('../stock/actions')
+  const overview = await getStockOverview()
+  const marketStock = overview.find(o => o.market_id === product_market_id)
+  
+  const unit_cost_price = marketStock && marketStock.cmup > 0 ? marketStock.cmup : marketData.cost_price;
   const unit_selling_price = marketData.selling_price;
 
   const generalRevenue = quantity * unit_selling_price;

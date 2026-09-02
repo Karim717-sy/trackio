@@ -116,7 +116,7 @@ export default function StockClient({ supplies, markets, overview }: { supplies:
               <tr className="bg-slate-50 border-b border-slate-200 text-sm">
                 <th className="py-3 px-4 font-semibold text-slate-700">Produit & Pays</th>
                 <th className="py-3 px-4 font-semibold text-slate-700 text-center">En Stock</th>
-                <th className="py-3 px-4 font-semibold text-slate-700 text-right">CMUP / pièce</th>
+                <th className="py-3 px-4 font-semibold text-slate-700 text-right">Coût de revient unitaire</th>
                 <th className="py-3 px-4 font-semibold text-slate-700 text-right">Valeur Stock</th>
                 <th className="py-3 px-4 font-semibold text-slate-700 text-right">Prix de vente</th>
                 <th className="py-3 px-4 font-semibold text-slate-700 text-right">CA Potentiel</th>

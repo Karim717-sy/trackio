@@ -65,7 +65,7 @@ export default function RentabilityForm({ markets }: { markets: any[] }) {
               <option value="" disabled>Sélectionnez un produit...</option>
               {markets.map(m => (
                 <option key={m.id} value={m.id}>
-                  {m.products.name} - {m.country} (Coût: {m.cost_price} {m.currency || 'XOF'})
+                  {m.products.name} - {m.country} (Coût: {Math.round(m.cmup)} {m.currency || 'XOF'})
                 </option>
               ))}
             </select>
